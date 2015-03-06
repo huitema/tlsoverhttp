@@ -82,7 +82,7 @@ by firewalls an other MITM boxes.
 </front>
 
 <middle>
-<section title="Introduction">
+<section title="Introduction" anchor="intro" >
 <t>
 Following the Snowden revelation, there has been an increased push to deploy
 encryption over the Internet. The IAB reinforced this trend official by publishing the
@@ -216,6 +216,7 @@ diagram with web Socket framing really looks like:
 ]]></artwork>
 </figure>
 </section>
+
 <section title="HTLS parameters" >
 <t>
 An application that starts an HTLS connection will need to specify a the HTTP or HTTPS URL 
@@ -225,6 +226,95 @@ We assume that these parameters will be passed as an end to end exchange between
 server and clients, prior to the establishment of the HTLS connection.
 </t>
 </section>
+
+<section title="MITM bypass scenario" >
+<t>
+As stated in <xref target="intro" />, one of the main motivation for HTLS is to
+offer a better choice to the user when a secure connection is compromised by
+MITM attack
+</t>
+<figure anchor="MITMAttackBybass">
+<artwork><![CDATA[
+Client         |      MITM      |   Server
+---------------+----------------+--------------
+               |                |
+Establish TLS  |                |
+connection ----------->         |
+               |   intercept    | 
+               |      --------------->
+               |                | establish TLS
+               |      <---------------
+               |    modify      |
+	<---------------        |
+Detect         |                |
+Modification   |                |
+Establishes    |                |
+WebSocket  -------------------------->
+        <-----------------------------
+Establishes    |                |
+HTLS    ----------------------------->
+        <-----------------------------
+Continues      |                |
+application ------------------------->
+        <-----------------------------
+               |                |
+	
+]]></artwork>
+</figure>
+<t>
+The exchanges depicted in <xref target="MITMAttackBybass" /> are easy to
+understand, but a few of the actions require further explanation:
+</t>
+<t>
+<list style="symbols" >
+<t>How does the client detect the modification?</t>
+<t>How does the client know that the server can use HTLS, and what parameters to use?</t>
+<t>What about performance degradation?</t>
+<t>Isn't this a cat and mouse game?</t>
+</list>
+</t>
+<t>
+There is lots of work going on in the IETF and in the industry to detect 
+attacks against TLS. The most popular attack involves the forging of certificates
+by the MITM, as done for example by the "Superfish" software <xref target="Superfish" />.
+The MITM will generate a fake certificate for the target, have it signed by a 
+certificate authority under its control, and somehow convince the security
+software on the client side to trust that certificate authority. The client
+can detect the attack if it knows the "right" certificate for the server and
+observes a mismatch. The client could also apply some logic to find suspicious 
+characteristics in the certificate provided by the MITM, and detect the fakery.
+</t>
+<t>
+Once the client decides that the certificate is probably fake, it has to establish a 
+web socket to the server, and for that it needs parameters. In fact, since the client 
+already knows the name of the server and has already decided to use web socket over
+TLS, it needs just one parameter, the URI of the HTLS web socket service on
+the server. The simplest solution is to use a constant value, "HTLS." Successful
+establishment of a web socket through that URI indicates that the server 
+supports HTLS.
+</t>
+<t>
+Clearly, using HTLS degrades performance. There are a number of additional handshakes
+before any application data can be exchange, some additional overhead due
+to encapsulation errors, and a computing charge for running the encryption
+twice. Running HTLS is thus a tradeoff. In the absence of HTLS, the client's
+only choice are to drop the connection, or accept to work in an insecure manner.
+HTLS adds a third choice, a way to bypass the MITM attack at the cost of reduced 
+performance. There will be cases where secure and slow is better than either 
+no connection at all or an insecure connection.
+</t>
+<t>
+Of course, it is only a matter of time before some MITM discover the use of
+HTLS and start either blocking it or interfering with it in the same way they
+interfere with TLS. This truly is a game of cat and mice, in which HTLS
+is just one more tool for the mice. When HTLS is blocked, the mice will
+have to take evasive action, such as changing Web Sockets default
+parameters, or using a different framing that the MITM does not
+yet recognize.  
+</t>
+
+</section>
+
 <section title="Security Considerations">
 <t> 
 The draft addresses a major security issue, the interception of 
@@ -276,6 +366,18 @@ Thnaks to Dave Thaler for suggesting the use of Web Sockets for encapsulating TL
     </reference>
 
 
+    <reference anchor="Superfish" target="http://www.zdnet.com/article/lenovos-superfish-its-worse-than-we-thought/">
+        <front>
+            <title>Lenovo's Superfish spectacle: 'Catastrophic' security failures discovered</title>
+            <author fullname="Charlie Osborne" initials="C." surname="Osborne"/>
+            <date month="February" year="2015" />
+            <abstract>
+	    <t>
+            Superfish isn't just adware -- it can also be a nightmare for those who value their privacy.
+            </t>
+            </abstract>  
+        </front>
+    </reference>
 
 </references>  
 

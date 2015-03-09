@@ -1,10 +1,11 @@
 
 
 
+
 Network Working Group                                         C. Huitema
 Internet-Draft                                                 Microsoft
-Intended status: Experimental                              March 6, 2015
-Expires: September 7, 2015
+Intended status: Experimental                              March 8, 2015
+Expires: September 9, 2015
 
 
                              TLS over HTTP
@@ -45,14 +46,14 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on September 7, 2015.
+   This Internet-Draft will expire on September 9, 2015.
 
 
 
 
 
 
-Huitema                 Expires September 7, 2015               [Page 1]
+Huitema                 Expires September 9, 2015               [Page 1]
 
 Internet-Draft            TLS over HTTP (HTLS)                March 2015
 
@@ -80,12 +81,13 @@ Table of Contents
    3.  Framing with web sockets  . . . . . . . . . . . . . . . . . .   4
    4.  HTLS parameters . . . . . . . . . . . . . . . . . . . . . . .   5
    5.  MITM bypass scenario  . . . . . . . . . . . . . . . . . . . .   5
-   6.  Security Considerations . . . . . . . . . . . . . . . . . . .   7
-   7.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .   7
-   8.  Acknowledgments . . . . . . . . . . . . . . . . . . . . . . .   7
-   9.  References  . . . . . . . . . . . . . . . . . . . . . . . . .   8
-     9.1.  Normative References  . . . . . . . . . . . . . . . . . .   8
-     9.2.  Informative References  . . . . . . . . . . . . . . . . .   8
+   6.  Winning the cat and mouse game  . . . . . . . . . . . . . . .   7
+   7.  Security Considerations . . . . . . . . . . . . . . . . . . .   8
+   8.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .   8
+   9.  Acknowledgments . . . . . . . . . . . . . . . . . . . . . . .   8
+   10. References  . . . . . . . . . . . . . . . . . . . . . . . . .   8
+     10.1.  Normative References . . . . . . . . . . . . . . . . . .   8
+     10.2.  Informative References . . . . . . . . . . . . . . . . .   8
    Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .   9
 
 1.  Introduction
@@ -104,15 +106,15 @@ Table of Contents
    The MITM attacks against TLS can be detected in various ways.  For
    example, the TLS client might have obtained in advanced a good copy
    of the certificate used by the TLS server.  The client can then
-   compare the value used in the TLS exchange to the value in the good
 
 
 
-Huitema                 Expires September 7, 2015               [Page 2]
+Huitema                 Expires September 9, 2015               [Page 2]
 
 Internet-Draft            TLS over HTTP (HTLS)                March 2015
 
 
+   compare the value used in the TLS exchange to the value in the good
    copy.  If they differ, the MITM attack is detected.  However, in the
    current state of the art, the only choice of the client are to abort
    the connection, or to tolerate the encryption compromise by the
@@ -163,8 +165,7 @@ Internet-Draft            TLS over HTTP (HTLS)                March 2015
 
 
 
-
-Huitema                 Expires September 7, 2015               [Page 3]
+Huitema                 Expires September 9, 2015               [Page 3]
 
 Internet-Draft            TLS over HTTP (HTLS)                March 2015
 
@@ -220,7 +221,7 @@ Internet-Draft            TLS over HTTP (HTLS)                March 2015
 
 
 
-Huitema                 Expires September 7, 2015               [Page 4]
+Huitema                 Expires September 9, 2015               [Page 4]
 
 Internet-Draft            TLS over HTTP (HTLS)                March 2015
 
@@ -276,7 +277,7 @@ Internet-Draft            TLS over HTTP (HTLS)                March 2015
 
 
 
-Huitema                 Expires September 7, 2015               [Page 5]
+Huitema                 Expires September 9, 2015               [Page 5]
 
 Internet-Draft            TLS over HTTP (HTLS)                March 2015
 
@@ -318,8 +319,6 @@ Internet-Draft            TLS over HTTP (HTLS)                March 2015
 
    o  What about performance degradation?
 
-   o  Isn't this a cat and mouse game?
-
    There is lots of work going on in the IETF and in the industry to
    detect attacks against TLS.  The most popular attack involves the
    forging of certificates by the MITM, as done for example by the
@@ -329,16 +328,15 @@ Internet-Draft            TLS over HTTP (HTLS)                March 2015
    client side to trust that certificate authority.  The client can
    detect the attack if it knows the "right" certificate for the server
    and observes a mismatch.  The client could also apply some logic to
+   find suspicious characteristics in the certificate provided by the
+   MITM, and detect the fakery.
 
 
 
-Huitema                 Expires September 7, 2015               [Page 6]
+Huitema                 Expires September 9, 2015               [Page 6]
 
 Internet-Draft            TLS over HTTP (HTLS)                March 2015
 
-
-   find suspicious characteristics in the certificate provided by the
-   MITM, and detect the fakery.
 
    Once the client decides that the certificate is probably fake, it has
    to establish a web socket to the server, and for that it needs
@@ -359,43 +357,69 @@ Internet-Draft            TLS over HTTP (HTLS)                March 2015
    reduced performance.  There will be cases where secure and slow is
    better than either no connection at all or an insecure connection.
 
-   Of course, it is only a matter of time before some MITM discover the
-   use of HTLS and start either blocking it or interfering with it in
-   the same way they interfere with TLS.  This truly is a game of cat
-   and mice, in which HTLS is just one more tool for the mice.  When
-   HTLS is blocked, the mice will have to take evasive action, such as
-   changing Web Sockets default parameters, or using a different framing
-   that the MITM does not yet recognize.
+6.  Winning the cat and mouse game
 
-6.  Security Considerations
+   Deceiving the MITM attacker is of course a game of cat and mouse.
+   The mice, in that case, are taking evasive action to escape the cat,
+   the MITM attacker.  HTLS is one of these evasive actions.  It will
+   work as long as the attackers are not aware of it, but we have to
+   assume that smarter mice beget smart cats.  That is the reason for
+   having an explicit "framing" layer as part of the architecture.
+
+   The first instantiation of the framing uses "web sockets" and a
+   standard URI at the server, but it is reasonably easy for an attacker
+   to detect that.  The answer is of course to include some level of
+   obfuscation in the framing layer, so that HTLS traffic is difficult
+   to distinguish from other web traffic.  The simplest obfuscation is
+   to keep the web socket encapsulation, but make the URI parameter hard
+   to discover by third parties.  Instead of using the constant string
+   "HTLS," servers can come up with their own creative names.  If the
+   server and the client cooperate, they can vary these names over time
+   according to some pre-established schedule.  At that point, it
+   becomes hard for the MITM to distinguish HTLS from other types of web
+   sockets.  The MITM attacker now is left with two options: block all
+   web socket traffic, or allow HTLS to pass unmolested.
+
+   If it turns out that MITM attackers are willing to ban all web socket
+   traffic, we will have to study a different form of framing.  This
+   should probably be based on HTTP/2.0 support for multiple streams and
+   bidirectional transmissions.  We could imagine sending each TLS frame
+   as a separate page, with the set of pages multiplexed over the
+   HTTP/2.0 connection.  The frame will be encoded as page content,
+
+
+
+Huitema                 Expires September 9, 2015               [Page 7]
+
+Internet-Draft            TLS over HTTP (HTLS)                March 2015
+
+
+   which could be binary, but could also be some sophisticated text or
+   image representation designed to elude MITM censorship.  This is of
+   course for further study.
+
+   In the end game, the MITM attacker should be left with the choice of
+   allowing HTLS or blocking all web traffic.  Some attackers may indeed
+   chose to block everything, but most will probably just give up.
+
+7.  Security Considerations
 
    The draft addresses a major security issue, the interception of
    secure connections by middle boxes that break the end to end nature
    of encryption.
 
-7.  IANA Considerations
+8.  IANA Considerations
 
    This draft does not require any IANA action.
 
-8.  Acknowledgments
+9.  Acknowledgments
 
    Thnaks to Dave Thaler for suggesting the use of Web Sockets for
    encapsulating TLS in HTTPS.
 
+10.  References
 
-
-
-
-
-
-Huitema                 Expires September 7, 2015               [Page 7]
-
-Internet-Draft            TLS over HTTP (HTLS)                March 2015
-
-
-9.  References
-
-9.1.  Normative References
+10.1.  Normative References
 
    [RFC2026]  Bradner, S., "The Internet Standards Process -- Revision
               3", BCP 9, RFC 2026, October 1996.
@@ -403,7 +427,7 @@ Internet-Draft            TLS over HTTP (HTLS)                March 2015
    [RFC6455]  Fette, I. and A. Melnikov, "The WebSocket Protocol", RFC
               6455, December 2011.
 
-9.2.  Informative References
+10.2.  Informative References
 
    [I-D.ietf-httpbis-http2]
               Belshe, M., Peon, R., and M. Thomson, "Hypertext Transfer
@@ -414,6 +438,17 @@ Internet-Draft            TLS over HTTP (HTLS)                March 2015
               Dierks, T. and E. Rescorla, "The Transport Layer Security
               (TLS) Protocol Version 1.3", draft-ietf-tls-tls13-04 (work
               in progress), January 2015.
+
+
+
+
+
+
+
+Huitema                 Expires September 9, 2015               [Page 8]
+
+Internet-Draft            TLS over HTTP (HTLS)                March 2015
+
 
    [IABConfidentiality]
               "IAB Statement on Internet Confidentiality", November
@@ -437,17 +472,6 @@ Internet-Draft            TLS over HTTP (HTLS)                March 2015
               security failures discovered", February 2015,
               <http://www.zdnet.com/article/
               lenovos-superfish-its-worse-than-we-thought/>.
-
-
-
-
-
-
-
-Huitema                 Expires September 7, 2015               [Page 8]
-
-Internet-Draft            TLS over HTTP (HTLS)                March 2015
-
 
 Author's Address
 
@@ -477,28 +501,4 @@ Author's Address
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Huitema                 Expires September 7, 2015               [Page 9]
-
+Huitema                 Expires September 9, 2015               [Page 9]

@@ -270,7 +270,6 @@ understand, but a few of the actions require further explanation:
 <t>How does the client detect the modification?</t>
 <t>How does the client know that the server can use HTLS, and what parameters to use?</t>
 <t>What about performance degradation?</t>
-<t>Isn't this a cat and mouse game?</t>
 </list>
 </t>
 <t>
@@ -303,16 +302,43 @@ HTLS adds a third choice, a way to bypass the MITM attack at the cost of reduced
 performance. There will be cases where secure and slow is better than either 
 no connection at all or an insecure connection.
 </t>
+</section>
+<section title="Winning the cat and mouse game" >
 <t>
-Of course, it is only a matter of time before some MITM discover the use of
-HTLS and start either blocking it or interfering with it in the same way they
-interfere with TLS. This truly is a game of cat and mice, in which HTLS
-is just one more tool for the mice. When HTLS is blocked, the mice will
-have to take evasive action, such as changing Web Sockets default
-parameters, or using a different framing that the MITM does not
-yet recognize.  
+Deceiving the MITM attacker is of course a game of cat and mouse. The mice, 
+in that case, are taking evasive action to escape the cat, the MITM attacker. 
+HTLS is one of these evasive actions. It will work as long as the attackers 
+are not aware of it, but we have to assume that smarter mice beget smart cats. 
+That is the reason for having an explicit "framing" layer as part of the 
+architecture. 
 </t>
-
+<t>
+The first instantiation of the framing uses "web sockets" and a standard URI 
+at the server, but it is reasonably easy for an attacker to detect that. The answer 
+is of course to include some level of obfuscation in the framing layer, so that 
+HTLS traffic is difficult to distinguish from other web traffic.
+The simplest obfuscation is to keep the web socket encapsulation, but make the 
+URI parameter hard to discover by third parties. Instead of using the constant 
+string "HTLS," servers can come up with their own creative names. If the server 
+and the client cooperate, they can vary these names over time according to some 
+pre-established schedule. At that point, it becomes hard for the MITM to distinguish 
+HTLS from other types of web sockets. The MITM attacker now is left with two options: 
+block all web socket traffic, or allow HTLS to pass unmolested.
+</t>
+<t>
+If it turns out that MITM attackers are willing to ban all web socket traffic, 
+we will have to study a different form of framing. This should probably be based 
+on HTTP/2.0 support for multiple streams and bidirectional transmissions. We could 
+imagine sending each TLS frame as a separate page, with the set of pages multiplexed 
+over the HTTP/2.0 connection. The frame will be encoded as page content, which 
+could be binary, but could also be some sophisticated text or image representation 
+designed to elude MITM censorship. This is of course for further study.
+</t>
+<t>
+In the end game, the MITM attacker should be left with the choice of allowing 
+HTLS or blocking all web traffic. Some attackers may indeed chose to block 
+everything, but most will probably just give up.
+</t>
 </section>
 
 <section title="Security Considerations">

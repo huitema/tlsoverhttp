@@ -4,8 +4,8 @@
 
 Network Working Group                                         C. Huitema
 Internet-Draft                                                 Microsoft
-Intended status: Experimental                              March 8, 2015
-Expires: September 9, 2015
+Intended status: Experimental                              March 9, 2015
+Expires: September 10, 2015
 
 
                              TLS over HTTP
@@ -21,15 +21,15 @@ Abstract
    case changing these messages.
 
    TLS over HTTP allows clients and servers to carry a TLS conversation
-   on top of HTTP, and thus bypass the man in the middle attackers.
+   on top of HTTP, and thus bypass the man-in-the-middle attackers.
    Different deployment models are possible, e.g., HTTP over TLS over
-   HTTP, application over TLS over HTTP, or HTTP over TLS over HTTP over
-   TLS.
+   HTTP, application-layer-protocol over TLS over HTTP, or HTTP over TLS
+   over HTTP over TLS.
 
    The proposed solution allows for reuse of the existing TLS
    implementation, thus minimizing the development costs and risks.  It
-   includes optional obfuscation layer, to maximize likelihood of
-   working unnoticed by firewalls an other MITM boxes.
+   includes an optional obfuscation layer, to maximize the likelihood of
+   working unnoticed by firewalls and other MITM boxes.
 
 Status of This Memo
 
@@ -46,14 +46,14 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on September 9, 2015.
+   This Internet-Draft will expire on September 10, 2015.
 
 
 
 
 
 
-Huitema                 Expires September 9, 2015               [Page 1]
+Huitema                Expires September 10, 2015               [Page 1]
 
 Internet-Draft            TLS over HTTP (HTLS)                March 2015
 
@@ -76,28 +76,27 @@ Copyright Notice
 Table of Contents
 
    1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   2
-     1.1.  Requirements  . . . . . . . . . . . . . . . . . . . . . .   3
    2.  TLS over HTTP architecture  . . . . . . . . . . . . . . . . .   3
    3.  Framing with web sockets  . . . . . . . . . . . . . . . . . .   4
    4.  HTLS parameters . . . . . . . . . . . . . . . . . . . . . . .   5
    5.  MITM bypass scenario  . . . . . . . . . . . . . . . . . . . .   5
-   6.  Winning the cat and mouse game  . . . . . . . . . . . . . . .   7
-   7.  Security Considerations . . . . . . . . . . . . . . . . . . .   8
-   8.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .   8
-   9.  Acknowledgments . . . . . . . . . . . . . . . . . . . . . . .   8
-   10. References  . . . . . . . . . . . . . . . . . . . . . . . . .   8
-     10.1.  Normative References . . . . . . . . . . . . . . . . . .   8
+   6.  Winning the cat and mouse game  . . . . . . . . . . . . . . .   6
+   7.  Security Considerations . . . . . . . . . . . . . . . . . . .   7
+   8.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .   7
+   9.  Acknowledgments . . . . . . . . . . . . . . . . . . . . . . .   7
+   10. References  . . . . . . . . . . . . . . . . . . . . . . . . .   7
+     10.1.  Normative References . . . . . . . . . . . . . . . . . .   7
      10.2.  Informative References . . . . . . . . . . . . . . . . .   8
-   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .   9
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .   8
 
 1.  Introduction
 
    Following the Snowden revelation, there has been an increased push to
    deploy encryption over the Internet.  The IAB reinforced this trend
-   official by publishing the IAB Statement on Internet Confidentiality
+   by publishing the IAB Statement on Internet Confidentiality
    [IABConfidentiality].  Of course, every action brings a reaction, and
    the push for encryption is countered by the deployment of encryption-
-   breaking middle-boxes.  The middle boxes typically use weaknesses in
+   breaking middleboxes.  The middle boxes typically use weaknesses in
    the Certificate Verification system of popular TLS implementations to
    insert themselves as "Man in the middle" (MITM).  In another class of
    attacks, the middleboxes will simply block encrypted communication,
@@ -106,33 +105,27 @@ Table of Contents
    The MITM attacks against TLS can be detected in various ways.  For
    example, the TLS client might have obtained in advanced a good copy
    of the certificate used by the TLS server.  The client can then
+   compare the value used in the TLS exchange to the value in the good
 
 
 
-Huitema                 Expires September 9, 2015               [Page 2]
+Huitema                Expires September 10, 2015               [Page 2]
 
 Internet-Draft            TLS over HTTP (HTLS)                March 2015
 
 
-   compare the value used in the TLS exchange to the value in the good
    copy.  If they differ, the MITM attack is detected.  However, in the
-   current state of the art, the only choice of the client are to abort
-   the connection, or to tolerate the encryption compromise by the
-   middle-box.
+   current state of the art, the only choice of the client is either to
+   abort the connection, or to tolerate the encryption compromise by the
+   middlebox.
 
    Both the MITM attack and the clear-text only attacks can be mitigated
    by running TLS on top of HTTP (HTLS).
 
-1.1.  Requirements
-
-   The keywords MUST, MUST NOT, REQUIRED, SHALL, SHALL NOT, SHOULD,
-   SHOULD NOT, RECOMMENDED, MAY, and OPTIONAL, when they appear in this
-   document, are to be interpreted as described in [RFC2026].
-
 2.  TLS over HTTP architecture
 
    The basic TLS over HTTP architecture has four layers, including a
-   framing layer which is conceptually placed between TCP and HTTP.
+   framing layer which is conceptually placed between TLS and HTTP.
 
    +-------------+
    | application |
@@ -149,26 +142,11 @@ Internet-Draft            TLS over HTTP (HTLS)                March 2015
    The framing layer is responsible for encapsulating the TLS frames
    into the HTTP protocol.
 
-   The Figure 1 describes the simplest stack, in which we assume that
-   HTTP is run "end to end."  There are many possible variants, in
+   Figure 1 describes the simplest stack, in which we assume that HTTP
+   is run "end to end."  There are many possible variants, including in
    particular the HTTPS variant, in which HTTP is run over TLS.  In that
    case, we will effectively see two instances of TLS running on top of
    each other.
-
-
-
-
-
-
-
-
-
-
-
-Huitema                 Expires September 9, 2015               [Page 3]
-
-Internet-Draft            TLS over HTTP (HTLS)                March 2015
-
 
    +-------------+
    | application |
@@ -184,51 +162,50 @@ Internet-Draft            TLS over HTTP (HTLS)                March 2015
 
                                  Figure 2
 
-   Having two instances of TLS is obviously causing some amount of
-   overhead.  It is however the price to pay in order to actually
-   traverse series of middleboxes while establishing end-to-end
-   encryption.
+
+
+
+Huitema                Expires September 10, 2015               [Page 3]
+
+Internet-Draft            TLS over HTTP (HTLS)                March 2015
+
+
+   Having two instances of TLS obviously causes some amount of overhead.
+   It is however the price to pay in order to actually traverse series
+   of middleboxes while establishing end-to-end encryption.
 
    This document defines framing of HTLS over web sockets [RFC6455].
    There may be a need in the future to provide more options.  For
-   example, if middle-boxes started to deploy inspection software to
+   example, if middleboxes started to deploy inspection software to
    detect and prevent usage of HTLS over web sockets, there will be a
    need to define some form of obfuscation, rendering the content as
-   indistinguishable as possible form regular HTTP content.  The new
+   indistinguishable as possible from regular HTTP content.  The new
    semantics introduced in HTTP/2.0 [I-D.ietf-httpbis-http2] will
    probably allow for efficient implementation of such encapsulations.
 
 3.  Framing with web sockets
 
    The WebSocket protocol [RFC6455] enables applications to transmit
-   arbitrary binary messages over a that is initiated as HTTP or HTTPS.
-   The web socket protocol is compatible with HTTP/1.1 [RFC2616] and
-   with HTTP over TLS [RFC2818].
+   arbitrary binary messages over a channel that is initiated as HTTP or
+   HTTPS.  The WebSocket protocol is compatible with HTTP/1.1 [RFC2616]
+   and with HTTP over TLS [RFC2818].
 
    When using the web socket framing, the client will establish a web
-   socket using the URL reserved by the server for HTLS over web
+   socket using the URI reserved by the server for HTLS over web
    sockets.  Once the web socket has reached the OPEN state, both client
    and server will be able to send and receive data frames, as defined
    in section 6 of [RFC6455].  Each TLS frame will be sent as a separate
-   Web socket data frame.
+   web socket data frame.
 
    The client will start the TLS handshake as defined for the client-
    chosen version of TLS in [RFC2246], [RFC5246], or
-   [I-D.ietf-tls-tls13].  Client and server will then execute the TLS
-   protocol, and carry the application protocol inside TLS data frames.
-
-
-
-
-
-Huitema                 Expires September 9, 2015               [Page 4]
-
-Internet-Draft            TLS over HTTP (HTLS)                March 2015
-
+   [I-D.ietf-tls-tls13].  The client and server will then execute the
+   TLS protocol, and carry the application protocol inside TLS data
+   frames.
 
    We should note that, while the framing layer is conceptually layered
-   above HTTP, the web socket protocols really replaces HTTP after the
-   initial negotiations.  The architecture diagram with web Socket
+   above HTTP, the WebSocket protocol really replaces HTTP after the
+   initial negotiations.  The architecture diagram with WebSocket
    framing really looks like:
 
                  +-------------------+
@@ -241,10 +218,18 @@ Internet-Draft            TLS over HTTP (HTLS)                March 2015
 
                                  Figure 3
 
+
+
+
+Huitema                Expires September 10, 2015               [Page 4]
+
+Internet-Draft            TLS over HTTP (HTLS)                March 2015
+
+
 4.  HTLS parameters
 
    An application that starts an HTLS connection will need to specify a
-   the HTTP or HTTPS URL used to establish the underlying HTTP
+   the HTTP or HTTPS URI used to establish the underlying HTTP
    connection and the type of framing required for the encapsulation.
    We assume that these parameters will be passed as an end to end
    exchange between server and clients, prior to the establishment of
@@ -254,33 +239,7 @@ Internet-Draft            TLS over HTTP (HTLS)                March 2015
 
    As stated in Section 1, one of the main motivation for HTLS is to
    offer a better choice to the user when a secure connection is
-   compromised by MITM attack
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Huitema                 Expires September 9, 2015               [Page 5]
-
-Internet-Draft            TLS over HTTP (HTLS)                March 2015
-
+   compromised by an MITM attack.
 
    Client         |      MITM      |   Server
    ---------------+----------------+--------------
@@ -298,10 +257,10 @@ Internet-Draft            TLS over HTTP (HTLS)                March 2015
    Establishes    |                |
    WebSocket  -------------------------->
            <-----------------------------
-   Establishes    |                |
+   Establish      |                |
    HTLS    ----------------------------->
            <-----------------------------
-   Continues      |                |
+   Continue       |                |
    application ------------------------->
            <-----------------------------
                   |                |
@@ -314,8 +273,17 @@ Internet-Draft            TLS over HTTP (HTLS)                March 2015
 
    o  How does the client detect the modification?
 
+
+
+
+
+Huitema                Expires September 10, 2015               [Page 5]
+
+Internet-Draft            TLS over HTTP (HTLS)                March 2015
+
+
    o  How does the client know that the server can use HTLS, and what
-      parameters to use?
+      parameters should it use?
 
    o  What about performance degradation?
 
@@ -331,43 +299,45 @@ Internet-Draft            TLS over HTTP (HTLS)                March 2015
    find suspicious characteristics in the certificate provided by the
    MITM, and detect the fakery.
 
-
-
-Huitema                 Expires September 9, 2015               [Page 6]
-
-Internet-Draft            TLS over HTTP (HTLS)                March 2015
-
-
    Once the client decides that the certificate is probably fake, it has
-   to establish a web socket to the server, and for that it needs
+   to establish a WebSocket session to the server, and for that it needs
    parameters.  In fact, since the client already knows the name of the
-   server and has already decided to use web socket over TLS, it needs
-   just one parameter, the URI of the HTLS web socket service on the
-   server.  The simplest solution is to use a constant value, "HTLS."
-   Successful establishment of a web socket through that URI indicates
-   that the server supports HTLS.
+   server and has already decided to use the WebSocket protocol over
+   TLS, it needs just one parameter, the URI of the HTLS web socket
+   service on the server.  The simplest solution is to use a constant
+   value, "HTLS."  Successful establishment of a web socket through that
+   URI indicates that the server supports HTLS.
 
    Clearly, using HTLS degrades performance.  There are a number of
-   additional handshakes before any application data can be exchange,
+   additional handshakes before any application data can be exchanged,
    some additional overhead due to encapsulation errors, and a computing
    charge for running the encryption twice.  Running HTLS is thus a
-   tradeoff.  In the absence of HTLS, the client's only choice are to
-   drop the connection, or accept to work in an insecure manner.  HTLS
+   tradeoff.  In the absence of HTLS, the client's only choices are to
+   drop the connection, or accept working in an insecure manner.  HTLS
    adds a third choice, a way to bypass the MITM attack at the cost of
    reduced performance.  There will be cases where secure and slow is
    better than either no connection at all or an insecure connection.
 
 6.  Winning the cat and mouse game
 
-   Deceiving the MITM attacker is of course a game of cat and mouse.
-   The mice, in that case, are taking evasive action to escape the cat,
-   the MITM attacker.  HTLS is one of these evasive actions.  It will
-   work as long as the attackers are not aware of it, but we have to
-   assume that smarter mice beget smart cats.  That is the reason for
-   having an explicit "framing" layer as part of the architecture.
+   Deceiving the MITM attacker is of course a game of "cat and mouse."
+   The mice (the victims), in that case, are taking evasive action to
+   escape the cat (the MITM attacker).  HTLS is one of these evasive
+   actions.  It will work as long as the attackers are not aware of it,
+   but we have to assume that smarter mice beget smart cats.  That is
+   the reason for having an optional "framing" layer as part of the
+   architecture.
 
-   The first instantiation of the framing uses "web sockets" and a
+   The first instantiation of the framing uses web sockets and a
    standard URI at the server, but it is reasonably easy for an attacker
+
+
+
+Huitema                Expires September 10, 2015               [Page 6]
+
+Internet-Draft            TLS over HTTP (HTLS)                March 2015
+
+
    to detect that.  The answer is of course to include some level of
    obfuscation in the framing layer, so that HTLS traffic is difficult
    to distinguish from other web traffic.  The simplest obfuscation is
@@ -386,27 +356,19 @@ Internet-Draft            TLS over HTTP (HTLS)                March 2015
    bidirectional transmissions.  We could imagine sending each TLS frame
    as a separate page, with the set of pages multiplexed over the
    HTTP/2.0 connection.  The frame will be encoded as page content,
-
-
-
-Huitema                 Expires September 9, 2015               [Page 7]
-
-Internet-Draft            TLS over HTTP (HTLS)                March 2015
-
-
    which could be binary, but could also be some sophisticated text or
    image representation designed to elude MITM censorship.  This is of
    course for further study.
 
    In the end game, the MITM attacker should be left with the choice of
    allowing HTLS or blocking all web traffic.  Some attackers may indeed
-   chose to block everything, but most will probably just give up.
+   choose to block everything, but most will probably just give up.
 
 7.  Security Considerations
 
    The draft addresses a major security issue, the interception of
-   secure connections by middle boxes that break the end to end nature
-   of encryption.
+   secure connections by middleboxes that break the end to end nature of
+   encryption.
 
 8.  IANA Considerations
 
@@ -414,18 +376,23 @@ Internet-Draft            TLS over HTTP (HTLS)                March 2015
 
 9.  Acknowledgments
 
-   Thnaks to Dave Thaler for suggesting the use of Web Sockets for
+   Thanks to Dave Thaler for suggesting the use of Web Sockets for
    encapsulating TLS in HTTPS.
 
 10.  References
 
 10.1.  Normative References
 
-   [RFC2026]  Bradner, S., "The Internet Standards Process -- Revision
-              3", BCP 9, RFC 2026, October 1996.
-
    [RFC6455]  Fette, I. and A. Melnikov, "The WebSocket Protocol", RFC
               6455, December 2011.
+
+
+
+
+Huitema                Expires September 10, 2015               [Page 7]
+
+Internet-Draft            TLS over HTTP (HTLS)                March 2015
+
 
 10.2.  Informative References
 
@@ -438,17 +405,6 @@ Internet-Draft            TLS over HTTP (HTLS)                March 2015
               Dierks, T. and E. Rescorla, "The Transport Layer Security
               (TLS) Protocol Version 1.3", draft-ietf-tls-tls13-04 (work
               in progress), January 2015.
-
-
-
-
-
-
-
-Huitema                 Expires September 9, 2015               [Page 8]
-
-Internet-Draft            TLS over HTTP (HTLS)                March 2015
-
 
    [IABConfidentiality]
               "IAB Statement on Internet Confidentiality", November
@@ -489,16 +445,4 @@ Author's Address
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-Huitema                 Expires September 9, 2015               [Page 9]
+Huitema                Expires September 10, 2015               [Page 8]
